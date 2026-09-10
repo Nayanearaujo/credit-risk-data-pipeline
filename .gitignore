@@ -1,0 +1,33 @@
+# Ambiente
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Dados brutos (não versionar dados sensíveis)
+data/bronze/*.csv
+data/silver/*.csv
+data/gold/*.csv
+*.duckdb
+
+# Modelos treinados (arquivos grandes)
+src/models/*.pkl
+src/models/*.joblib
+
+# Notebooks com outputs
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+
+# Cobertura de testes
+.coverage
+htmlcov/
+.pytest_cache/
