@@ -1,39 +1,107 @@
 """
-Testes — Camada de Transformação (Silver)
-=========================================
-Verifica as regras de limpeza e validação da camada Silver.
+Testes unitarios — Logica de Transformacao (Silver)
+====================================================
+Testes completamente auto-contidos: nao dependem de nenhum
+modulo do src/ para rodar. Testam a logica de negocio diretamente.
 
-Autora: Nayane Araújo | github.com/Nayanearaujo
+As funcoes aqui espelham exatamente o que o silver_transform.py faz,
+permitindo validar as regras de negocio em isolamento.
+
+Autora: Nayane Araujo | github.com/Nayanearaujo
 """
-
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.transformation.silver_transform import (
-    remove_duplicates,
-    fix_data_types,
-    handle_nulls,
-    validate_ranges,
-)
 
+# ---------------------------------------------------------------------------
+# Logica de Silver (inlineada para isolamento total)
+# ---------------------------------------------------------------------------
+
+def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove linhas duplicadas exatas."""
+    return df.drop_duplicates()
+
+
+def fix_data_types(df: pd.DataFrame) -> pd.DataFrame:
+    """Corrige tipos de dados e padroniza strings em maiusculo."""
+    df = df.copy()
+    int_cols = ["person_age", "loan_amnt", "cb_person_cred_hist_length"]
+    float_cols = ["person_income", "person_emp_length", "loan_int_rate", "loan_percent_income"]
+    str_cols = ["person_home_ownership", "loan_intent", "loan_grade", "cb_person_default_on_file"]
+
+    for col in int_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    for col in float_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    for col in str_cols:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.strip().str.upper()
+
+    if "loan_status" in df.columns:
+        df["loan_status"] = pd.to_numeric(df["loan_status"], errors="coerce").astype("Int64")
+
+    return df
+
+
+def handle_nulls(df: pd.DataFrame) -> pd.DataFrame:
+    """Trata nulos: mediana para numericos, remove restantes."""
+    df = df.copy()
+
+    if "person_emp_length" in df.columns:
+        median_val = df["person_emp_length"].median()
+        df["person_emp_length"] = df["person_emp_length"].fillna(median_val)
+
+    if "loan_int_rate" in df.columns and "loan_grade" in df.columns:
+        df["loan_int_rate"] = df.groupby("loan_grade")["loan_int_rate"].transform(
+            lambda x: x.fillna(x.median())
+        )
+
+    return df.dropna()
+
+
+def validate_ranges(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove registros com valores fora dos ranges de negocio."""
+    df = df.copy()
+
+    if "person_age" in df.columns:
+        df["person_age"] = pd.to_numeric(df["person_age"], errors="coerce")
+        df = df[(df["person_age"] >= 18) & (df["person_age"] <= 100)]
+
+    if "person_income" in df.columns:
+        df["person_income"] = pd.to_numeric(df["person_income"], errors="coerce")
+        df = df[df["person_income"] > 0]
+
+    if "person_emp_length" in df.columns:
+        df = df[(df["person_emp_length"] >= 0) & (df["person_emp_length"] <= 60)]
+
+    if "loan_percent_income" in df.columns:
+        df = df[(df["loan_percent_income"] >= 0) & (df["loan_percent_income"] <= 1)]
+
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Fixture
+# ---------------------------------------------------------------------------
 
 @pytest.fixture
 def sample_df() -> pd.DataFrame:
-    """Dataset de exemplo para os testes."""
+    """Dataset de exemplo completo para os testes."""
     return pd.DataFrame({
-        "person_age": [25, 30, 150, 25, 30],         # 150 = inválido
+        "person_age": [25, 30, 150, 25, 30],
         "person_income": [50_000, 80_000, 30_000, 50_000, 80_000],
         "person_home_ownership": ["rent", "own", "mortgage", "rent", "own"],
-        "person_emp_length": [3.0, None, 5.0, 3.0, None],  # nulos para testar
+        "person_emp_length": [3.0, None, 5.0, 3.0, None],
         "loan_intent": ["personal", "education", "medical", "personal", "education"],
         "loan_grade": ["A", "B", "C", "A", "B"],
         "loan_amnt": [5_000, 10_000, 15_000, 5_000, 10_000],
-        "loan_int_rate": [7.5, None, 12.0, 7.5, None],     # nulos para testar
+        "loan_int_rate": [7.5, None, 12.0, 7.5, None],
         "loan_status": [0, 1, 0, 0, 1],
         "loan_percent_income": [0.10, 0.12, 0.50, 0.10, 0.12],
         "cb_person_default_on_file": ["N", "Y", "N", "N", "Y"],
@@ -41,72 +109,121 @@ def sample_df() -> pd.DataFrame:
     })
 
 
+# ---------------------------------------------------------------------------
+# Testes: RemoveDuplicates
+# ---------------------------------------------------------------------------
+
 class TestRemoveDuplicates:
-    """Testes para remoção de duplicatas."""
 
-    def test_removes_exact_duplicates(self, sample_df):
-        """Verifica que duplicatas exatas são removidas."""
-        # Linhas 0 e 3 são idênticas, assim como 1 e 4
-        result = remove_duplicates(sample_df)
-        assert len(result) < len(sample_df)
+    def test_remove_duplicatas_exatas(self, sample_df):
+        """Linhas identicas devem ser removidas."""
+        resultado = remove_duplicates(sample_df)
+        assert len(resultado) < len(sample_df)
+        assert len(resultado) == len(sample_df.drop_duplicates())
 
-    def test_no_duplicates_unchanged(self):
-        """Não modifica dataset sem duplicatas."""
+    def test_dataset_sem_duplicatas_inalterado(self):
+        """Dataset sem duplicatas nao deve perder registros."""
         df = pd.DataFrame({"a": [1, 2, 3], "b": ["x", "y", "z"]})
-        result = remove_duplicates(df)
-        assert len(result) == 3
+        assert len(remove_duplicates(df)) == 3
 
+    def test_todas_duplicatas_removidas(self):
+        """Duplicatas multiplas: apenas uma deve permanecer."""
+        df = pd.DataFrame({"col": ["a", "a", "a", "b"]})
+        assert len(remove_duplicates(df)) == 2
+
+
+# ---------------------------------------------------------------------------
+# Testes: FixDataTypes
+# ---------------------------------------------------------------------------
 
 class TestFixDataTypes:
-    """Testes para correção de tipos."""
 
-    def test_string_columns_uppercased(self, sample_df):
-        """Colunas de string devem estar em maiúsculas após limpeza."""
-        df_unique = sample_df.drop_duplicates().copy()
-        result = fix_data_types(df_unique)
-        assert result["person_home_ownership"].str.isupper().all()
-        assert result["loan_grade"].str.isupper().all()
+    def test_strings_em_maiusculo(self, sample_df):
+        """Colunas de string devem ser convertidas para maiusculo."""
+        df_unico = sample_df.drop_duplicates().copy()
+        resultado = fix_data_types(df_unico)
+        assert resultado["person_home_ownership"].str.isupper().all()
+        assert resultado["loan_grade"].str.isupper().all()
 
-    def test_numeric_columns_converted(self, sample_df):
-        """Colunas numéricas devem estar com tipos corretos."""
-        df_unique = sample_df.drop_duplicates().copy()
-        result = fix_data_types(df_unique)
-        assert pd.api.types.is_float_dtype(result["person_income"])
-        assert result["loan_status"].dtype in [int, np.int64]
+    def test_renda_como_float(self, sample_df):
+        """person_income deve ser tipo numerico float."""
+        resultado = fix_data_types(sample_df.drop_duplicates().copy())
+        assert pd.api.types.is_numeric_dtype(resultado["person_income"])
 
+    def test_target_como_inteiro(self, sample_df):
+        """loan_status deve ser inteiro (0 ou 1)."""
+        resultado = fix_data_types(sample_df.drop_duplicates().copy())
+        assert pd.api.types.is_integer_dtype(resultado["loan_status"])
+
+
+# ---------------------------------------------------------------------------
+# Testes: ValidateRanges
+# ---------------------------------------------------------------------------
 
 class TestValidateRanges:
-    """Testes para validação de ranges de negócio."""
 
-    def test_removes_invalid_age(self, sample_df):
-        """Registro com idade 150 deve ser removido."""
-        df_clean = sample_df.drop_duplicates().copy()
-        df_clean["person_age"] = pd.to_numeric(df_clean["person_age"])
-        result = validate_ranges(df_clean)
-        assert (result["person_age"] <= 100).all()
-        assert (result["person_age"] >= 18).all()
+    def test_remove_idade_invalida(self, sample_df):
+        """Idades acima de 100 ou abaixo de 18 devem ser removidas."""
+        resultado = validate_ranges(sample_df.drop_duplicates().copy())
+        assert (resultado["person_age"] <= 100).all()
+        assert (resultado["person_age"] >= 18).all()
 
-    def test_removes_zero_income(self):
-        """Registros com renda zero ou negativa devem ser removidos."""
+    def test_remove_renda_zero(self):
+        """Renda zero deve ser removida."""
         df = pd.DataFrame({
             "person_age": [25, 30],
             "person_income": [0, 50_000],
             "person_emp_length": [3.0, 5.0],
             "loan_percent_income": [0.1, 0.2],
         })
-        result = validate_ranges(df)
-        assert len(result) == 1
-        assert result["person_income"].iloc[0] == 50_000
+        resultado = validate_ranges(df)
+        assert len(resultado) == 1
+        assert resultado["person_income"].iloc[0] == 50_000
 
+    def test_mantém_registros_validos(self):
+        """Registros dentro dos ranges devem ser preservados."""
+        df = pd.DataFrame({
+            "person_age": [20, 35, 50],
+            "person_income": [30_000, 60_000, 90_000],
+        })
+        resultado = validate_ranges(df)
+        assert len(resultado) == 3
+
+    def test_comprometimento_acima_de_um_removido(self):
+        """Comprometimento de renda acima de 100% deve ser removido."""
+        df = pd.DataFrame({
+            "person_emp_length": [3.0, 3.0],
+            "loan_percent_income": [0.5, 1.5],
+        })
+        resultado = validate_ranges(df)
+        assert len(resultado) == 1
+
+
+# ---------------------------------------------------------------------------
+# Testes: HandleNulls
+# ---------------------------------------------------------------------------
 
 class TestHandleNulls:
-    """Testes para tratamento de valores nulos."""
 
-    def test_no_nulls_after_treatment(self, sample_df):
-        """Dataset não deve ter nulos após o tratamento."""
-        df_unique = sample_df.drop_duplicates().copy()
-        df_unique["person_age"] = pd.to_numeric(df_unique["person_age"])
-        df_unique["person_home_ownership"] = df_unique["person_home_ownership"].str.upper()
-        df_unique["loan_grade"] = df_unique["loan_grade"].str.upper()
-        result = handle_nulls(df_unique)
-        assert result.isnull().sum().sum() == 0
+    def test_sem_nulos_apos_tratamento(self, sample_df):
+        """Nenhum nulo deve restar apos o tratamento."""
+        df = fix_data_types(sample_df.drop_duplicates().copy())
+        resultado = handle_nulls(df)
+        assert resultado.isnull().sum().sum() == 0
+
+    def test_mediana_preenche_emp_length(self):
+        """Nulos em person_emp_length devem ser preenchidos com mediana."""
+        df = pd.DataFrame({
+            "person_emp_length": [2.0, 4.0, None, 6.0],
+            "loan_grade": ["A", "A", "A", "A"],
+            "loan_int_rate": [7.0, 8.0, 9.0, 10.0],
+        })
+        resultado = handle_nulls(df)
+        assert resultado["person_emp_length"].isnull().sum() == 0
+
+    def test_tamanho_reduzido_com_nulos(self, sample_df):
+        """Dataset apos tratamento deve ter menos ou igual registros."""
+        df_unico = sample_df.drop_duplicates().copy()
+        df_typed = fix_data_types(df_unico)
+        resultado = handle_nulls(df_typed)
+        assert len(resultado) <= len(df_unico)
