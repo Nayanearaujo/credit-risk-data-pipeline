@@ -1,0 +1,4 @@
+Modelo,auc_roc,f1_score,precision,recall
+Regressao Logistica,0.6395,0.0172,0.625,0.0087
+Random Forest,0.6357,0.0,0.0,0.0
+XGBoost,0.6224,0.0153,0.2812,0.0079

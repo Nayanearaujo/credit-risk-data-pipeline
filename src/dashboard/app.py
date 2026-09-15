@@ -271,6 +271,11 @@ def page_segment():
         fact["person_income"].between(sel_renda[0], sel_renda[1])
     )
     fact_f = fact[mask].copy()
+
+    # Garante valores validos para o campo de status
+    fact_f["status_label"] = fact_f["loan_status"].map({0: "Adimplente", 1: "Inadimplente"}).fillna("Outro")
+    fact_f = fact_f[fact_f["status_label"].isin(["Adimplente", "Inadimplente"])]
+
     st.caption(f"{len(fact_f):,} registros com os filtros aplicados")
 
     if fact_f.empty:
@@ -286,6 +291,7 @@ def page_segment():
             fact_f, x="loan_amnt",
             color="status_label",
             color_discrete_map=COR_MAP,
+            category_orders={"status_label": ["Adimplente", "Inadimplente"]},
             nbins=40, barmode="overlay", opacity=0.75,
             title="Distribuicao do Valor Solicitado (R$)",
             labels={"loan_amnt": "Valor (R$)", "status_label": "Status"},
@@ -298,6 +304,7 @@ def page_segment():
             fact_f, x="status_label", y="loan_int_rate",
             color="status_label",
             color_discrete_map=COR_MAP,
+            category_orders={"status_label": ["Adimplente", "Inadimplente"]},
             title="Taxa de Juros por Status",
             labels={"loan_int_rate": "Taxa (%)", "status_label": ""},
         )

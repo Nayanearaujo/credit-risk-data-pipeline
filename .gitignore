@@ -9,15 +9,15 @@ __pycache__/
 .Python
 *.egg-info/
 
-# Dados brutos (não versionar dados sensíveis)
+# Dados brutos (Bronze e Silver — nao versionar dados sensiveis)
 data/bronze/*.csv
 data/silver/*.csv
-data/gold/*.csv
 *.duckdb
 
-# Modelos treinados (arquivos grandes)
-src/models/*.pkl
-src/models/*.joblib
+# Gold e modelos: versionados para deploy no Streamlit Cloud
+# (arquivos pequenos de agregacao e modelo treinado)
+!data/gold/*.csv
+!src/models/*.pkl
 
 # Notebooks com outputs
 .ipynb_checkpoints/
