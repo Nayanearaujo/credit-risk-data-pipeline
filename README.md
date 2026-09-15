@@ -33,41 +33,41 @@ Este projeto **simula a plataforma de dados de uma fintech/banco**, entregando:
 ## 🏗️ Arquitetura — Medallion (Bronze → Silver → Gold)
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        FONTES DE DADOS                           │
-│  📦 Kaggle Credit Risk Dataset   🏦 API Banco Central (Selic)   │
-└──────────────────┬───────────────────────────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────┐
-│         🥉 BRONZE LAYER          │
-│  • Dados brutos sem alterações   │
-│  • Preserva audit trail          │
-│  • Formato: CSV                  │
-└──────────────────┬───────────────┘
-                   │  Python (Pandas)
-                   ▼
-┌──────────────────────────────────┐
-│         🥈 SILVER LAYER          │
-│  • Limpeza e validação           │
-│  • Tipagem correta               │
-│  • Nulos tratados (mediana)      │
-│  • Ranges validados              │
-│  • Formato: CSV + DuckDB         │
-└──────────────────┬───────────────┘
-                   │  SQL + Python
-                   ▼
-┌──────────────────────────────────┐
-│         🥇 GOLD LAYER            │
-│  • Star Schema (fatos/dimensões) │
-│  • Agregações de negócio         │
-│  • Features para ML              │
-│  • Formato: CSV + DuckDB         │
-└──────┬───────────────────────────┘
-       │
-       ├──► 🤖 Modelo de ML (XGBoost)
-       ├──► 📊 Dashboard Streamlit
-       └──► 📋 Relatórios SQL
++-------------------------------------------------------------------+
+|                       FONTES DE DADOS                             |
+|   Kaggle Credit Risk Dataset       API Banco Central (Selic)      |
++--------------------+----------------------------------------------+
+                     |
+                     v
++------------------------------------+
+|          BRONZE LAYER              |
+|  - Dados brutos sem alteracoes     |
+|  - Preserva audit trail            |
+|  - Formato: CSV                    |
++--------------------+---------------+
+                     |  Python (Pandas)
+                     v
++------------------------------------+
+|          SILVER LAYER              |
+|  - Limpeza e validacao             |
+|  - Tipagem correta                 |
+|  - Nulos tratados (mediana)        |
+|  - Ranges validados                |
+|  - Formato: CSV + DuckDB           |
++--------------------+---------------+
+                     |  SQL + Python
+                     v
++------------------------------------+
+|          GOLD LAYER                |
+|  - Star Schema (fatos/dimensoes)   |
+|  - Agregacoes de negocio           |
+|  - Features para ML                |
+|  - Formato: CSV + DuckDB           |
++--------+---------------------------+
+         |
+         +---> Modelo de ML (XGBoost)
+         +---> Dashboard Streamlit
+         +---> Relatorios SQL
 ```
 
 ---
