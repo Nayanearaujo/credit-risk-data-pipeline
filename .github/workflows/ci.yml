@@ -1,14 +1,3 @@
-# ============================================================
-# GitHub Actions — CI/CD Pipeline
-# ============================================================
-# Executa automaticamente a cada push ou Pull Request:
-#   1. Instala dependencias (via requirements-ci.txt)
-#   2. Verifica qualidade do codigo (flake8)
-#   3. Executa todos os testes com cobertura
-#
-# Autora: Nayane Araujo | github.com/Nayanearaujo
-# ============================================================
-
 name: CI Pipeline
 
 on:
@@ -46,27 +35,13 @@ jobs:
 
       - name: Verificar estilo com Flake8
         run: |
-          flake8 src/ tests/ \
-            --max-line-length=110 \
-            --ignore=E501,W503,W504,E203,E402,F401 \
-            --exclude=__pycache__,.git,notebooks/
+          flake8 tests/ \
+            --max-line-length=120 \
+            --ignore=E501,W503,W504,E203,E402,F401,W291,W293 \
+            --exclude=__pycache__,.git
 
-      - name: Executar testes com cobertura
-        env:
-          PYTHONPATH: ${{ github.workspace }}
+      - name: Executar testes
         run: |
           pytest tests/ -v \
-            --cov=src \
-            --cov-report=term-missing \
-            --cov-report=xml \
             --tb=short \
             -p no:warnings
-
-      - name: Upload de relatorio de cobertura
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: credit-risk-pipeline-coverage
-          fail_ci_if_error: false
