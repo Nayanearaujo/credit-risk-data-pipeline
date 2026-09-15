@@ -272,9 +272,9 @@ def page_segment():
     )
     fact_f = fact[mask].copy()
 
-    # Garante valores validos para o campo de status
-    fact_f["status_label"] = fact_f["loan_status"].map({0: "Adimplente", 1: "Inadimplente"}).fillna("Outro")
-    fact_f = fact_f[fact_f["status_label"].isin(["Adimplente", "Inadimplente"])]
+    # Reconstroi status_label direto do loan_status — sem depender de colunas pre-existentes
+    fact_f["status_label"] = fact_f["loan_status"].map({0: "Adimplente", 1: "Inadimplente"})
+    fact_f = fact_f.dropna(subset=["status_label"])
 
     st.caption(f"{len(fact_f):,} registros com os filtros aplicados")
 
@@ -282,51 +282,66 @@ def page_segment():
         st.warning("Nenhum registro com esses filtros.")
         return
 
-    COR_MAP = {"Adimplente": "#10b981", "Inadimplente": "#ef4444"}
+    adim = fact_f[fact_f["loan_status"] == 0]
+    inad = fact_f[fact_f["loan_status"] == 1]
 
     col1, col2 = st.columns(2)
 
     with col1:
-        fig = px.histogram(
-            fact_f, x="loan_amnt",
-            color="status_label",
-            color_discrete_map=COR_MAP,
-            category_orders={"status_label": ["Adimplente", "Inadimplente"]},
-            nbins=40, barmode="overlay", opacity=0.75,
-            title="Distribuicao do Valor Solicitado (R$)",
-            labels={"loan_amnt": "Valor (R$)", "status_label": "Status"},
+        fig = go.Figure()
+        fig.add_trace(go.Histogram(
+            x=adim["loan_amnt"], name="Adimplente",
+            marker_color="#10b981", opacity=0.75, nbinsx=40,
+        ))
+        fig.add_trace(go.Histogram(
+            x=inad["loan_amnt"], name="Inadimplente",
+            marker_color="#ef4444", opacity=0.75, nbinsx=40,
+        ))
+        fig.update_layout(
+            barmode="overlay", title="Distribuicao do Valor Solicitado (R$)",
+            xaxis_title="Valor (R$)", yaxis_title="Quantidade",
+            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+            legend=dict(orientation="h", y=1.1),
         )
-        fig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        fig = px.box(
-            fact_f, x="status_label", y="loan_int_rate",
-            color="status_label",
-            color_discrete_map=COR_MAP,
-            category_orders={"status_label": ["Adimplente", "Inadimplente"]},
+        fig = go.Figure()
+        fig.add_trace(go.Box(
+            y=adim["loan_int_rate"].dropna(), name="Adimplente",
+            marker_color="#10b981", boxmean=True,
+        ))
+        fig.add_trace(go.Box(
+            y=inad["loan_int_rate"].dropna(), name="Inadimplente",
+            marker_color="#ef4444", boxmean=True,
+        ))
+        fig.update_layout(
             title="Taxa de Juros por Status",
-            labels={"loan_int_rate": "Taxa (%)", "status_label": ""},
+            yaxis_title="Taxa (%)", showlegend=True,
+            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
         )
-        fig.update_layout(showlegend=False,
-                          plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True)
 
-    # Scatter renda x emprestimo
+    # Scatter renda x valor — amostra para performance
     sample = fact_f.sample(min(2000, len(fact_f)), random_state=42)
-    fig = px.scatter(
-        sample, x="person_income", y="loan_amnt",
-        color="status_label",
-        color_discrete_map=COR_MAP,
-        opacity=0.55,
+    s_adim = sample[sample["loan_status"] == 0]
+    s_inad = sample[sample["loan_status"] == 1]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=s_adim["person_income"], y=s_adim["loan_amnt"],
+        mode="markers", name="Adimplente",
+        marker=dict(color="#10b981", opacity=0.5, size=5),
+    ))
+    fig.add_trace(go.Scatter(
+        x=s_inad["person_income"], y=s_inad["loan_amnt"],
+        mode="markers", name="Inadimplente",
+        marker=dict(color="#ef4444", opacity=0.5, size=5),
+    ))
+    fig.update_layout(
         title="Renda vs Valor do Emprestimo",
-        labels={
-            "person_income": "Renda Anual (R$)",
-            "loan_amnt": "Valor do Emprestimo (R$)",
-            "status_label": "Status",
-        },
+        xaxis_title="Renda Anual (R$)", yaxis_title="Valor Solicitado (R$)",
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
     )
-    fig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig, use_container_width=True)
 
     # Comparacao de modelos
