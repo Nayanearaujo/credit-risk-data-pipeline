@@ -1,0 +1,30 @@
+# ============================================================
+# GitHub Actions — Keep-Alive para Streamlit Cloud
+# ============================================================
+# O Streamlit Community Cloud coloca apps em modo 'sleep'
+# se ficarem 7 dias sem nenhum acesso.
+# Este workflow dispara um ping automatico a cada 2 dias
+# para garantir que o dashboard fique sempre online e ativo!
+# ============================================================
+
+name: Keep-Alive Streamlit
+
+on:
+  schedule:
+    # Executa a cada 2 dias as 12:00 UTC (09:00 BRT)
+    - cron: '0 12 */2 * *'
+  workflow_dispatch: # Permite disparar manualmente pelo painel do GitHub
+
+jobs:
+  ping-app:
+    name: Ping Streamlit Dashboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enviar requisicao de ping para manter o app ativo
+        run: |
+          URL="https://credit-risk-data-pipeline.streamlit.app/"
+          echo "Disparando ping para: $URL"
+          STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "FALHA")
+          echo "Status HTTP retornado: $STATUS"
+          echo "Ping concluido com sucesso! O app permanecera ativo."

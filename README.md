@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
 [![SQL](https://img.shields.io/badge/SQL-DuckDB-FFCA28?logo=duckdb&logoColor=black)](https://duckdb.org)
 [![ML](https://img.shields.io/badge/ML-XGBoost-FF6600?logo=xgboost)](https://xgboost.readthedocs.io)
-[![Dashboard](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Online_no_Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://credit-risk-data-pipeline.streamlit.app/)
 [![CI](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=github-actions&logoColor=white)](.github/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -247,7 +247,7 @@ credit-risk-data-pipeline/
 
 ## 🔮 Próximos Passos
 
-- [ ] Deploy no Streamlit Community Cloud (link público)
+- [x] Deploy no Streamlit Community Cloud ([Acessar Dashboard Online](https://credit-risk-data-pipeline.streamlit.app/))
 - [ ] Migração para Azure Data Factory / AWS Glue
 - [ ] Implementação de Apache Airflow para orquestração
 - [ ] Modelo de NLP para análise de reclamações de crédito
