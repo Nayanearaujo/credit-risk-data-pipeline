@@ -15,7 +15,28 @@ import plotly.graph_objects as go
 import streamlit as st
 
 # ---------------------------------------------------------------------------
-# Configuracao
+# Paleta de Cores Unificada (UI/UX - Alto Contraste Semantico)
+# ---------------------------------------------------------------------------
+PALETTE = {
+    # Status binario: Contraste real entre categorias (Teal vs Laranja Coral)
+    "adimplente": "#0d9488",  # Verde-petroleo / Teal (bom pagador, confiavel)
+    "inadimplente": "#f97316",  # Coral / Laranja vibrante (alerta claro de risco)
+    # Niveis de Decisao do Simulador
+    "risk_low": "#0d9488",  # Teal / Aprovado
+    "risk_mod": "#f59e0b",  # Ambar / Aprovado com restricoes
+    "risk_high": "#ef4444",  # Coral avermelhado / Negado
+    # Fundos dos cards de decisao
+    "risk_low_bg": "#042f2e",
+    "risk_mod_bg": "#451a03",
+    "risk_high_bg": "#450a0a",
+    # Paleta qualitativa para categorias nominais (ex: Moradia)
+    "categorical": ["#0284c7", "#0d9488", "#f59e0b", "#8b5cf6", "#ec4899", "#64748b"],
+    # Escala continua para taxas de risco e distribuicoes graduais
+    "risk_continuous": ["#0d9488", "#eab308", "#f97316", "#ef4444"],
+}
+
+# ---------------------------------------------------------------------------
+# Configuracao de Pagina e Estilos Globais
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Risco de Credito | Nayane Araujo",
@@ -27,53 +48,127 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-/* KPI cards com fundo escuro e texto branco */
+/* Espacamento superior para eliminar sobreposicao com a barra nativa do Streamlit */
+.block-container {
+    padding-top: 3.5rem !important;
+    padding-bottom: 2rem !important;
+}
+
+/* Tipografia e hierarquia de cabecalhos */
+h1 {
+    font-size: 1.85rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 0.25rem !important;
+}
+h2, h3 {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 0.6rem !important;
+}
+
+/* KPI metric cards com contraste, sombra suave e acento visual */
 [data-testid="metric-container"] {
-    background: linear-gradient(135deg, #1e3a5f, #0d2137);
-    border-radius: 10px;
-    padding: 16px 20px;
-    border-left: 4px solid #3b82f6;
-    color: white !important;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 12px;
+    padding: 18px 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 4px solid #0d9488;
+    box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+[data-testid="metric-container"]:hover {
+    box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.35);
 }
 [data-testid="metric-container"] label {
     color: #94a3b8 !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
 [data-testid="metric-container"] [data-testid="stMetricValue"] {
-    color: white !important;
-    font-size: 28px !important;
+    color: #f8fafc !important;
+    font-size: 26px !important;
     font-weight: 700 !important;
 }
 [data-testid="metric-container"] [data-testid="stMetricDelta"] {
     font-size: 13px !important;
 }
-/* Status badges */
-.status-ok {
-    background: #065f46;
-    color: #6ee7b7;
-    padding: 8px 16px;
+
+/* Sidebar Radio Navigation com affordance de clique e estado ativo */
+div[data-testid="stSidebar"] div[role="radiogroup"] > label {
+    padding: 10px 14px;
     border-radius: 8px;
-    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 8px;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out;
+    background: rgba(255, 255, 255, 0.02);
+}
+div[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(13, 148, 136, 0.5);
+    transform: translateX(2px);
+}
+div[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"],
+div[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
+    background: rgba(13, 148, 136, 0.18) !important;
+    border: 1px solid #0d9488 !important;
+    border-left: 5px solid #0d9488 !important;
+}
+div[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) p {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+}
+
+/* Status badges na sidebar */
+.status-ok {
+    background: rgba(13, 148, 136, 0.15);
+    color: #2dd4bf;
+    border: 1px solid #0d9488;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     display: inline-block;
-    margin: 4px 0;
+    margin: 3px 0;
 }
 .status-warn {
-    background: #78350f;
+    background: rgba(245, 158, 11, 0.15);
     color: #fbbf24;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 14px;
+    border: 1px solid #f59e0b;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     display: inline-block;
-    margin: 4px 0;
+    margin: 3px 0;
 }
-/* Resultado do simulador */
-.risk-card {
-    border-radius: 12px;
-    padding: 28px;
-    text-align: center;
-    margin-bottom: 16px;
+
+/* Card de drivers explicativos no simulador */
+.driver-card {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 14px;
+}
+.driver-title {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+}
+.driver-item {
+    font-size: 13px;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+    line-height: 1.5;
 }
 </style>
 """,
@@ -142,20 +237,24 @@ def load_feature_names():
 def render_sidebar() -> str:
     with st.sidebar:
         st.title("💳 Risco de Credito")
-        st.markdown("**Nayane Araujo**  \nEng. de Dados")
+        st.markdown("**Nayane Araujo**  \nEngenharia de Dados e Machine Learning")
         st.markdown(
             "[![GitHub](https://img.shields.io/badge/GitHub-Nayanearaujo-181717?logo=github)]"
-            "(https://github.com/Nayanearaujo)"
+            "(https://github.com/Nayanearaujo/credit-risk-data-pipeline)"
         )
         st.divider()
-        page = st.radio(
-            "Pagina",
-            ["Visao Geral", "Analise por Segmento", "Simulador de Credito"],
+        nav_options = [
+            "📊 Visao Geral",
+            "🔍 Analise por Segmento",
+            "⚡ Simulador de Credito",
+        ]
+        selected = st.radio(
+            "Navegacao",
+            nav_options,
             label_visibility="collapsed",
         )
         st.divider()
-        st.caption("Bronze -> Silver -> Gold")
-        st.caption("Medallion Architecture")
+        st.caption("Arquitetura Medallion: Bronze -> Silver -> Gold")
         fact = load_gold("fact_loans")
         model = load_model()
         if not fact.empty:
@@ -176,7 +275,12 @@ def render_sidebar() -> str:
                 '<div class="status-warn">Modelo nao treinado</div>',
                 unsafe_allow_html=True,
             )
-    return page
+
+    if "Visao Geral" in selected:
+        return "Visao Geral"
+    if "Analise por Segmento" in selected:
+        return "Analise por Segmento"
+    return "Simulador de Credito"
 
 
 # ---------------------------------------------------------------------------
@@ -186,14 +290,14 @@ def render_sidebar() -> str:
 
 def page_overview():
     st.title("Visao Geral do Portfolio de Credito")
-    st.caption("Analise end-to-end com Arquitetura Medallion")
+    st.caption("Monitoramento executivo e indicadores de risco da carteira de credito")
 
     fact = load_gold("fact_loans")
     if fact.empty:
         st.error("Execute o pipeline primeiro: `python run_pipeline.py`")
         return
 
-    # KPIs
+    # KPIs agrupados no topo
     total = len(fact)
     inad = int(fact["loan_status"].sum())
     taxa = inad / total
@@ -204,7 +308,7 @@ def page_overview():
     c2.metric(
         "Inadimplentes",
         f"{inad:,}",
-        delta=f"{taxa:.1%} do total",
+        delta=f"{taxa:.1%} do portfolio",
         delta_color="inverse",
     )
     c3.metric("Taxa de Inadimplencia", f"{taxa:.1%}")
@@ -223,9 +327,9 @@ def page_overview():
                 x="loan_grade",
                 y="default_rate",
                 color="default_rate",
-                color_continuous_scale="RdYlGn_r",
+                color_continuous_scale=PALETTE["risk_continuous"],
                 title="Inadimplencia por Grade de Risco",
-                labels={"loan_grade": "Grade", "default_rate": "Taxa"},
+                labels={"loan_grade": "Grade", "default_rate": "Taxa de Inadimplencia"},
                 text_auto=".1%",
             )
             fig.update_traces(textfont_size=12)
@@ -246,9 +350,9 @@ def page_overview():
                 y="loan_intent",
                 orientation="h",
                 color="default_rate",
-                color_continuous_scale="RdYlGn_r",
+                color_continuous_scale=PALETTE["risk_continuous"],
                 title="Inadimplencia por Finalidade do Emprestimo",
-                labels={"loan_intent": "", "default_rate": "Taxa"},
+                labels={"loan_intent": "", "default_rate": "Taxa de Inadimplencia"},
                 text_auto=".1%",
             )
             fig.update_traces(textfont_size=12)
@@ -260,44 +364,58 @@ def page_overview():
             )
             st.plotly_chart(fig, use_container_width=True)
 
-    # Grafico linha 2
-    agg_a = load_gold("agg_default_by_age")
-    if not agg_a.empty:
-        order = ["18-25", "26-35", "36-45", "46-60", "60+"]
-        agg_a["age_group"] = pd.Categorical(
-            agg_a["age_group"], categories=order, ordered=True
+    # Graficos linha 2
+    c_age, c_home = st.columns(2)
+
+    with c_age:
+        agg_a = load_gold("agg_default_by_age")
+        if not agg_a.empty:
+            order = ["18-25", "26-35", "36-45", "46-60", "60+"]
+            agg_a["age_group"] = pd.Categorical(
+                agg_a["age_group"], categories=order, ordered=True
+            )
+            agg_a = agg_a.sort_values("age_group")
+            fig = px.bar(
+                agg_a,
+                x="age_group",
+                y="default_rate",
+                color="default_rate",
+                color_continuous_scale=PALETTE["risk_continuous"],
+                title="Inadimplencia por Faixa Etaria",
+                labels={
+                    "age_group": "Faixa Etaria",
+                    "default_rate": "Taxa de Inadimplencia",
+                },
+                text_auto=".1%",
+            )
+            fig.update_traces(textfont_size=12)
+            fig.update_layout(
+                showlegend=False,
+                coloraxis_showscale=False,
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    with c_home:
+        # Distribuicao de moradia em grafico de rosca com alto contraste
+        home_d = fact["person_home_ownership"].value_counts().reset_index()
+        home_d.columns = ["Tipo", "Qtd"]
+        fig = px.pie(
+            home_d,
+            values="Qtd",
+            names="Tipo",
+            hole=0.45,
+            title="Distribuicao por Tipo de Moradia",
+            color_discrete_sequence=PALETTE["categorical"],
         )
-        agg_a = agg_a.sort_values("age_group")
-        fig = px.bar(
-            agg_a,
-            x="age_group",
-            y="default_rate",
-            color="default_rate",
-            color_continuous_scale="Blues_r",
-            title="Inadimplencia por Faixa Etaria",
-            labels={"age_group": "Faixa Etaria", "default_rate": "Taxa"},
-            text_auto=".1%",
-        )
-        fig.update_traces(textfont_size=13)
+        fig.update_traces(textposition="inside", textinfo="percent+label")
         fig.update_layout(
-            showlegend=False,
-            coloraxis_showscale=False,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
+            showlegend=False,
         )
         st.plotly_chart(fig, use_container_width=True)
-
-    # Distribuicao moradia
-    home_d = fact["person_home_ownership"].value_counts().reset_index()
-    home_d.columns = ["Tipo", "Qtd"]
-    fig = px.pie(
-        home_d,
-        values="Qtd",
-        names="Tipo",
-        title="Distribuicao por Tipo de Moradia",
-        color_discrete_sequence=["#3b82f6", "#10b981", "#f59e0b", "#6366f1"],
-    )
-    st.plotly_chart(fig, use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
@@ -307,7 +425,9 @@ def page_overview():
 
 def page_segment():
     st.title("Analise por Segmento")
-    st.caption("Filtre os dados e explore padroes de inadimplencia")
+    st.caption(
+        "Filtre as caracteristicas da carteira e explore padroes de inadimplencia"
+    )
 
     fact = load_gold("fact_loans")
     if fact.empty:
@@ -322,11 +442,11 @@ def page_segment():
         )
 
     # Filtros
-    with st.expander("Filtros", expanded=True):
+    with st.expander("Filtros de Segmentacao", expanded=True):
         fc1, fc2, fc3 = st.columns(3)
         with fc1:
             grades = sorted(fact["loan_grade"].dropna().unique())
-            sel_grade = st.multiselect("Grade", grades, default=grades)
+            sel_grade = st.multiselect("Grade de Risco", grades, default=grades)
         with fc2:
             intents = sorted(fact["loan_intent"].dropna().unique())
             sel_intent = st.multiselect("Finalidade", intents, default=intents)
@@ -344,7 +464,7 @@ def page_segment():
     )
     fact_f = fact[mask].copy()
 
-    # Reconstroi status_label direto do loan_status - sem depender de colunas pre-existentes
+    # Reconstroi status_label direto do loan_status
     fact_f["status_label"] = fact_f["loan_status"].map(
         {0: "Adimplente", 1: "Inadimplente"}
     )
@@ -353,7 +473,7 @@ def page_segment():
     st.caption(f"{len(fact_f):,} registros com os filtros aplicados")
 
     if fact_f.empty:
-        st.warning("Nenhum registro com esses filtros.")
+        st.warning("Nenhum registro encontrado com os filtros selecionados.")
         return
 
     adim = fact_f[fact_f["loan_status"] == 0]
@@ -367,8 +487,8 @@ def page_segment():
             go.Histogram(
                 x=adim["loan_amnt"],
                 name="Adimplente",
-                marker_color="#10b981",
-                opacity=0.75,
+                marker_color=PALETTE["adimplente"],
+                opacity=0.8,
                 nbinsx=40,
             )
         )
@@ -376,8 +496,8 @@ def page_segment():
             go.Histogram(
                 x=inad["loan_amnt"],
                 name="Inadimplente",
-                marker_color="#ef4444",
-                opacity=0.75,
+                marker_color=PALETTE["inadimplente"],
+                opacity=0.8,
                 nbinsx=40,
             )
         )
@@ -385,7 +505,7 @@ def page_segment():
             barmode="overlay",
             title="Distribuicao do Valor Solicitado (R$)",
             xaxis_title="Valor (R$)",
-            yaxis_title="Quantidade",
+            yaxis_title="Quantidade de Contratos",
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             legend=dict(orientation="h", y=1.1),
@@ -398,7 +518,7 @@ def page_segment():
             go.Box(
                 y=adim["loan_int_rate"].dropna(),
                 name="Adimplente",
-                marker_color="#10b981",
+                marker_color=PALETTE["adimplente"],
                 boxmean=True,
             )
         )
@@ -406,20 +526,20 @@ def page_segment():
             go.Box(
                 y=inad["loan_int_rate"].dropna(),
                 name="Inadimplente",
-                marker_color="#ef4444",
+                marker_color=PALETTE["inadimplente"],
                 boxmean=True,
             )
         )
         fig.update_layout(
             title="Taxa de Juros por Status",
-            yaxis_title="Taxa (%)",
+            yaxis_title="Taxa de Juros (% a.a.)",
             showlegend=True,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Scatter renda x valor - amostra para performance
+    # Scatter renda x valor - amostra para performance fluida
     sample = fact_f.sample(min(2000, len(fact_f)), random_state=42)
     s_adim = sample[sample["loan_status"] == 0]
     s_inad = sample[sample["loan_status"] == 1]
@@ -430,7 +550,7 @@ def page_segment():
             y=s_adim["loan_amnt"],
             mode="markers",
             name="Adimplente",
-            marker=dict(color="#10b981", opacity=0.5, size=5),
+            marker=dict(color=PALETTE["adimplente"], opacity=0.5, size=5),
         )
     )
     fig.add_trace(
@@ -439,7 +559,7 @@ def page_segment():
             y=s_inad["loan_amnt"],
             mode="markers",
             name="Inadimplente",
-            marker=dict(color="#ef4444", opacity=0.5, size=5),
+            marker=dict(color=PALETTE["inadimplente"], opacity=0.5, size=5),
         )
     )
     fig.update_layout(
@@ -472,14 +592,14 @@ def page_segment():
 def page_simulator():
     st.title("Simulador de Concessao de Credito")
     st.caption(
-        "Preencha os campos e calcule a probabilidade de inadimplencia em tempo real."
+        "Insira as informacoes cadastrais e financeiras para estimar o risco em tempo real."
     )
 
     model = load_model()
     scaler = load_scaler()
     feature_names = load_feature_names()
     if model is None:
-        st.error("Modelo nao treinado. Execute: `python run_pipeline.py`")
+        st.error("Modelo nao treinado. Execute o pipeline: `python run_pipeline.py`")
         return
 
     with st.form("form_credito", clear_on_submit=False):
@@ -533,16 +653,17 @@ def page_simulator():
             pct = loan_amnt / income
             st.markdown(
                 f"""
-            <div style='background:#1e3a5f; border-radius:8px; padding:14px; margin-top:4px;'>
-                <div style='color:#94a3b8; font-size:12px; text-transform:uppercase;'>
+            <div style='background:#1e293b; border-radius:10px; padding:14px;
+                        margin-top:4px; border:1px solid rgba(255,255,255,0.08);'>
+                <div style='color:#94a3b8; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;'>
                     Comprometimento de Renda
                 </div>
-                <div style='color:{"#ef4444" if pct > 0.3 else "#10b981"};
-                            font-size:28px; font-weight:700;'>
+                <div style='color:{"#ef4444" if pct > 0.3 else "#0d9488"};
+                            font-size:26px; font-weight:700;'>
                     {pct:.1%}
                 </div>
-                <div style='color:#64748b; font-size:11px;'>
-                    {"Acima do limite recomendado" if pct > 0.3 else "Dentro do limite recomendado"}
+                <div style='color:#94a3b8; font-size:11px;'>
+                    {"Acima do limite prudencial (30%)" if pct > 0.3 else "Dentro do limite prudencial (30%)"}
                 </div>
             </div>
             """,
@@ -557,7 +678,6 @@ def page_simulator():
         )
 
     if submitted:
-        # Constrói o input com os mesmos nomes de colunas crus do treinamento
         raw_input = {
             "person_age": [float(age)],
             "person_income": [float(income)],
@@ -573,17 +693,14 @@ def page_simulator():
         }
         df_input = pd.DataFrame(raw_input)
 
-        # Reaproveita exatamente as funções de feature engineering de produção
+        # Feature engineering identico ao pipeline de treinamento
         df_derived = create_derived_features(df_input)
         df_encoded = encode_categoricals(df_derived)
 
-        # Reindexa para as colunas de feature_names.csv, preenchendo apenas dummies ausentes com 0
+        # Reindexacao pelas features oficiais
         X_input = df_encoded.reindex(columns=feature_names, fill_value=0)
 
-        # Escalonamento: os dados de treinamento foram passados pelo StandardScaler.
-        # Embora modelos baseados em árvores (ex: XGBoost) sejam invariantes à escala estritamente monotônica,
-        # o pipeline foi treinado com os dados escalonados e modelos lineares necessitam de escala.
-        # Por consistência com os artefatos salvos, aplicamos scaler.transform se disponível.
+        # Normalizacao com StandardScaler
         if scaler is not None:
             X_eval = scaler.transform(X_input)
         else:
@@ -592,24 +709,28 @@ def page_simulator():
         try:
             prob = float(model.predict_proba(X_eval)[0][1])
 
-            if prob < 0.3:
-                cor = "#10b981"
+            # Decisao e faixas de risco
+            if prob < 0.30:
+                cor = PALETTE["risk_low"]
                 nivel = "BAIXO RISCO"
                 decisao = "Aprovado"
                 icon = "✅"
-                bg = "#064e3b"
+                bg = PALETTE["risk_low_bg"]
+                explicacao = "Perfil compativel com politicas convencionais de concessao de credito."
             elif prob < 0.55:
-                cor = "#f59e0b"
+                cor = PALETTE["risk_mod"]
                 nivel = "RISCO MODERADO"
-                decisao = "Aprovado com restricoes"
+                decisao = "Aprovado com Restricoes / Revisao Manual"
                 icon = "⚠️"
-                bg = "#78350f"
+                bg = PALETTE["risk_mod_bg"]
+                explicacao = "Indicadores intermediarios. Recomenda-se analise documental detalhada."
             else:
-                cor = "#ef4444"
+                cor = PALETTE["risk_high"]
                 nivel = "ALTO RISCO"
                 decisao = "Negado"
                 icon = "❌"
-                bg = "#7f1d1d"
+                bg = PALETTE["risk_high_bg"]
+                explicacao = "Probabilidade de inadimplencia acima do limite maximo tolerado pela politica."
 
             st.divider()
             col_r, col_g = st.columns([1, 1])
@@ -618,21 +739,24 @@ def page_simulator():
                 st.markdown(
                     f"""
                 <div style='background:{bg}; border:2px solid {cor};
-                            border-radius:14px; padding:32px; text-align:center;'>
-                    <div style='font-size:40px; margin-bottom:8px;'>{icon}</div>
-                    <div style='color:{cor}; font-size:16px; font-weight:600;
-                                text-transform:uppercase; letter-spacing:0.1em;'>
+                            border-radius:14px; padding:28px; text-align:center;'>
+                    <div style='font-size:38px; margin-bottom:6px;'>{icon}</div>
+                    <div style='color:{cor}; font-size:15px; font-weight:700;
+                                text-transform:uppercase; letter-spacing:0.08em;'>
                         {nivel}
                     </div>
-                    <div style='color:white; font-size:52px; font-weight:800; margin:12px 0;'>
+                    <div style='color:white; font-size:50px; font-weight:800; margin:10px 0;'>
                         {prob:.1%}
                     </div>
-                    <div style='color:#cbd5e1; font-size:13px; margin-bottom:16px;'>
-                        Probabilidade de Inadimplencia
+                    <div style='color:#cbd5e1; font-size:13px; margin-bottom:14px;'>
+                        Probabilidade Estimada de Inadimplencia
                     </div>
                     <div style='background:{cor}; color:white; border-radius:8px;
-                                padding:8px 16px; font-weight:700; font-size:15px;'>
+                                padding:8px 16px; font-weight:700; font-size:14px;'>
                         {decisao}
+                    </div>
+                    <div style='color:#cbd5e1; font-size:12px; margin-top:12px;'>
+                        {explicacao}
                     </div>
                 </div>
                 """,
@@ -640,34 +764,40 @@ def page_simulator():
                 )
 
             with col_g:
+                # Gauge com zonas nitidas (Aprovado, Revisao, Negado)
                 fig = go.Figure(
                     go.Indicator(
-                        mode="gauge+number+delta",
+                        mode="gauge+number",
                         value=prob * 100,
-                        number={"suffix": "%", "font": {"size": 48, "color": "white"}},
-                        delta={"reference": 30, "suffix": "%", "position": "bottom"},
+                        number={"suffix": "%", "font": {"size": 44, "color": "white"}},
                         gauge={
                             "axis": {
                                 "range": [0, 100],
-                                "tickfont": {"color": "#94a3b8"},
+                                "tickfont": {"color": "#94a3b8", "size": 11},
                             },
-                            "bar": {"color": cor, "thickness": 0.3},
+                            "bar": {"color": cor, "thickness": 0.28},
                             "bgcolor": "#0f172a",
-                            "bordercolor": "#1e293b",
+                            "bordercolor": "#334155",
                             "steps": [
-                                {"range": [0, 30], "color": "#064e3b"},
-                                {"range": [30, 55], "color": "#78350f"},
-                                {"range": [55, 100], "color": "#7f1d1d"},
+                                {"range": [0, 30], "color": "rgba(13, 148, 136, 0.35)"},
+                                {
+                                    "range": [30, 55],
+                                    "color": "rgba(245, 158, 11, 0.35)",
+                                },
+                                {
+                                    "range": [55, 100],
+                                    "color": "rgba(239, 68, 68, 0.35)",
+                                },
                             ],
                             "threshold": {
-                                "line": {"color": "white", "width": 2},
+                                "line": {"color": "#f8fafc", "width": 3},
                                 "thickness": 0.8,
-                                "value": 50,
+                                "value": prob * 100,
                             },
                         },
                         title={
-                            "text": "Score de Risco",
-                            "font": {"color": "#94a3b8", "size": 14},
+                            "text": "Score de Risco (0 - 100%)",
+                            "font": {"color": "#94a3b8", "size": 13},
                         },
                     )
                 )
@@ -675,11 +805,80 @@ def page_simulator():
                     height=280,
                     paper_bgcolor="rgba(0,0,0,0)",
                     font={"color": "white"},
+                    margin=dict(l=25, r=25, t=40, b=20),
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-            # Resumo
-            st.subheader("Resumo da Analise")
+            # Analise dos Principais Fatores do Perfil (Drivers de Risco)
+            st.subheader("Fatores Determinantes da Decisao")
+            drivers = []
+
+            # 1. Comprometimento
+            if pct > 0.30:
+                drivers.append(
+                    f"⚠️ <b>Comprometimento de Renda:</b> Solicita {pct:.1%} da renda anual "
+                    "(acima do teto prudencial de 30%), elevando a exposicao ao risco."
+                )
+            else:
+                drivers.append(
+                    f"✅ <b>Comprometimento de Renda:</b> {pct:.1%} da renda anual solicitado "
+                    "esta dentro da margem conservadora."
+                )
+
+            # 2. Historico anterior
+            if prior_default == "Sim":
+                drivers.append(
+                    "❌ <b>Historico de Inadimplencia:</b> Registro previo de inadimplencia no bureau "
+                    "constitui um dos principais preditores negativos no modelo."
+                )
+            else:
+                drivers.append(
+                    "✅ <b>Historico Limpo:</b> Sem registros previos de inadimplencia identificados."
+                )
+
+            # 3. Grade e Taxa
+            if loan_grade in ["A", "B"]:
+                drivers.append(
+                    f"✅ <b>Grade de Risco:</b> Classificacao favoravel (Grade {loan_grade}) "
+                    f"com taxa de juros de {loan_int_rate:.1f}% a.a."
+                )
+            elif loan_grade in ["C", "D"]:
+                drivers.append(
+                    f"⚠️ <b>Grade de Risco Intermediaria:</b> Classificacao {loan_grade} "
+                    f"com taxa de juros de {loan_int_rate:.1f}% a.a."
+                )
+            else:
+                drivers.append(
+                    f"❌ <b>Grade de Risco Elevada:</b> Classificacao {loan_grade} "
+                    f"com taxa de juros de {loan_int_rate:.1f}% a.a."
+                )
+
+            # 4. Estabilidade de emprego
+            if emp_length >= 3:
+                drivers.append(
+                    f"✅ <b>Estabilidade Empregaticia:</b> {emp_length:.0f} anos de emprego comprovados."
+                )
+            else:
+                drivers.append(
+                    f"⚠️ <b>Tempo de Emprego Recente:</b> Apenas {emp_length:.0f} anos no emprego atual."
+                )
+
+            drivers_html = "".join(
+                [f"<div class='driver-item'>{d}</div>" for d in drivers]
+            )
+            st.markdown(
+                f"""
+                <div class='driver-card'>
+                    <div class='driver-title'>Impacto dos Fatores neste Perfil</div>
+                    {drivers_html}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # Resumo tabular
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.subheader("Resumo dos Dados Submetidos")
             dados = [
                 ("Solicitante", f"{age} anos", f"Renda: R$ {income:,.0f}"),
                 (
