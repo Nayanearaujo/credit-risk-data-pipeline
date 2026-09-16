@@ -8,7 +8,7 @@
 [![SQL](https://img.shields.io/badge/SQL-DuckDB-FFCA28?logo=duckdb&logoColor=black)](https://duckdb.org)
 [![ML](https://img.shields.io/badge/ML-XGBoost-FF6600?logo=xgboost)](https://xgboost.readthedocs.io)
 [![Dashboard](https://img.shields.io/badge/Dashboard-Online_no_Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://credit-risk-data-pipeline.streamlit.app/)
-[![CI](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=github-actions&logoColor=white)](.github/workflows/ci.yml)
+[![CI](https://github.com/Nayanearaujo/credit-risk-data-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/Nayanearaujo/credit-risk-data-pipeline/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Autora:** [Nayane Araújo](https://github.com/Nayanearaujo) · Pós-Graduação em Engenharia de Dados
