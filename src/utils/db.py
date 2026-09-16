@@ -13,7 +13,11 @@ from pathlib import Path
 import duckdb
 from dotenv import load_dotenv
 from loguru import logger
-from sqlalchemy import create_engine, text
+
+try:
+    from sqlalchemy import create_engine, text
+except ImportError:
+    create_engine, text = None, None
 
 load_dotenv()
 
@@ -78,7 +82,13 @@ def get_postgres_engine():
 
     Raises:
         EnvironmentError: Se variáveis de ambiente não estiverem configuradas.
+        ImportError: Se SQLAlchemy não estiver instalado.
     """
+    if create_engine is None:
+        raise ImportError(
+            "SQLAlchemy não está instalado. Instale com 'pip install sqlalchemy psycopg2-binary'."
+        )
+
     required_vars = [
         "POSTGRES_HOST",
         "POSTGRES_DB",
