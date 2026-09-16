@@ -152,6 +152,12 @@ Acesse em `http://localhost:8501` para navegar pela Visão Geral, Análise de Se
 pytest tests/ -v
 ```
 
+### 6. Deploy e Sincronização em Produção
+A aplicação está implantada no [Streamlit Community Cloud](https://credit-risk-data-pipeline.streamlit.app/).
+- **Artefatos Versionados:** Os artefatos pré-computados (`data/gold/fact_loans.csv`, `data/gold/model_comparison.csv`, `src/models/best_model.pkl`, `src/models/scaler.pkl` e `src/models/feature_names.csv`) são rastreados no Git para inicialização instantânea e determinística no ambiente serverless.
+- **Ciclo de Atualização:** Ao rodar `python run_pipeline.py`, os modelos e agregações são retreinados e recalculados. Um `git push origin main` dispara o redeploy automático no Streamlit Cloud via webhook nativo do GitHub.
+- **Disponibilidade Contínua:** Um workflow agendado (`.github/workflows/keep_alive.yml`) mantém o aplicativo ativo contra sleep automático da plataforma.
+
 ---
 
 ## Estrutura do Projeto
@@ -196,6 +202,7 @@ credit-risk-data-pipeline/
 |-- tests/
 |   |-- test_ingestion.py          <- Testes unitarios da camada Bronze
 |   |-- test_transformation.py     <- Testes unitarios das regras Silver
+|   |-- test_simulator_inference.py <- Validacao de inferencia e score do simulador
 |   +-- test_integration.py        <- Teste de integracao end-to-end com fixture
 |
 |-- .github/workflows/
