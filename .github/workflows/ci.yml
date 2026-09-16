@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Qualidade e Testes Unitarios
+    name: Qualidade e Testes de Integracao
     runs-on: ubuntu-latest
 
     steps:
@@ -44,45 +44,8 @@ jobs:
             --ignore=E501,W503,W504,E203,E402,F401,W291,W293 \
             --exclude=__pycache__,.git
 
-      - name: Executar testes unitarios
+      - name: Executar todos os testes
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          pytest tests/test_ingestion.py tests/test_transformation.py tests/test_simulator_inference.py -v \
-            --tb=short \
-            -p no:warnings
-
-  integration:
-    name: Teste de Integracao End-to-End
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout do repositorio
-        uses: actions/checkout@v4
-
-      - name: Configurar Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Cache de dependencias pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Instalar dependencias Python
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-ci.txt
-
-      - name: Executar teste de integracao
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          pytest tests/test_integration.py -v \
-            --tb=short \
-            -p no:warnings
+          pytest tests/ -v --tb=short --disable-warnings
