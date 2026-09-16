@@ -20,7 +20,11 @@ import pandas as pd
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
-from imblearn.over_sampling import SMOTE
+
+try:
+    from imblearn.over_sampling import SMOTE
+except ImportError:
+    SMOTE = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.utils.logger import setup_logger
@@ -181,6 +185,10 @@ def split_and_scale(
 
     # Balanceamento com SMOTE (apenas no treino!)
     if apply_smote:
+        if SMOTE is None:
+            raise ImportError(
+                "imbalanced-learn nao esta instalado. Instale com: pip install imbalanced-learn"
+            )
         smote = SMOTE(random_state=random_state)
         X_train, y_train = smote.fit_resample(X_train, y_train)
         logger.info(
