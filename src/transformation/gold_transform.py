@@ -248,12 +248,10 @@ def save_gold_tables(tables: dict) -> None:
 
         # DuckDB
         if conn:
-            conn.execute(
-                f"""
+            conn.execute(f"""
                 CREATE OR REPLACE TABLE {name} AS
                 SELECT * FROM read_csv_auto('{path}')
-            """
-            )
+            """)
             logger.success(f"💾 {name} registrada no DuckDB")
 
     if conn:

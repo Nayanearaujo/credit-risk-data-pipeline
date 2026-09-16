@@ -123,7 +123,9 @@ def encode_categoricals(df: pd.DataFrame) -> pd.DataFrame:
     )
     df = pd.concat([df, home_dummies], axis=1)
 
-    logger.info("✅ Encoding concluído: OrdinalEncoder (grade) + One-Hot (intent, home)")
+    logger.info(
+        "✅ Encoding concluído: OrdinalEncoder (grade) + One-Hot (intent, home)"
+    )
     return df
 
 
@@ -225,7 +227,9 @@ def prepare_features() -> tuple:
 
     X_train, X_test, y_train, y_test, scaler = split_and_scale(X, y)
 
-    logger.success(f"✅ Features prontas! {len(feature_names)} variáveis para o modelo.")
+    logger.success(
+        f"✅ Features prontas! {len(feature_names)} variáveis para o modelo."
+    )
     return X_train, X_test, y_train, y_test, scaler, feature_names
 
 

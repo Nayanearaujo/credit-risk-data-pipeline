@@ -218,7 +218,9 @@ def save_to_silver(df: pd.DataFrame) -> None:
             [str(OUTPUT_FILE)],
         )
         conn.close()
-        logger.success("💾 Silver registrada no DuckDB como tabela 'silver_credit_risk'")
+        logger.success(
+            "💾 Silver registrada no DuckDB como tabela 'silver_credit_risk'"
+        )
     except Exception as e:
         logger.warning(f"⚠️  DuckDB não disponível: {e}. CSV salvo com sucesso.")
 

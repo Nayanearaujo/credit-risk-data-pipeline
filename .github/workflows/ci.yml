@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Qualidade e Testes de Integracao
+    name: Qualidade e Testes Unitarios
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Verificar formatacao com Black
         run: |
-          black --check --line-length=120 src/ tests/ || true
+          black --check src/ tests/
 
       - name: Verificar estilo com Flake8
         run: |
