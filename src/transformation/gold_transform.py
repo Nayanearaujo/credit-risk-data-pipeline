@@ -1,5 +1,5 @@
 """
-Gold Layer — Modelagem Dimensional e Agregações de Negócio
+Gold Layer - Modelagem Dimensional e Agregações de Negócio
 ==========================================================
 Transforma os dados limpos (Silver) em dados prontos para:
   - Consumo em BI (Power BI, Streamlit)
@@ -37,6 +37,7 @@ INPUT_FILE = SILVER_PATH / "credit_risk_clean.csv"
 # Dimensões
 # ---------------------------------------------------------------------------
 
+
 def build_dim_borrower(df: pd.DataFrame) -> pd.DataFrame:
     """
     Dimensão Tomador de Empréstimo (Borrower).
@@ -46,16 +47,18 @@ def build_dim_borrower(df: pd.DataFrame) -> pd.DataFrame:
     """
     logger.info("🏗️  Construindo dim_borrower...")
 
-    dim = df[[
-        "person_age",
-        "person_income",
-        "person_home_ownership",
-        "person_emp_length",
-        "cb_person_default_on_file",
-        "cb_person_cred_hist_length",
-    ]].copy()
+    dim = df[
+        [
+            "person_age",
+            "person_income",
+            "person_home_ownership",
+            "person_emp_length",
+            "cb_person_default_on_file",
+            "cb_person_cred_hist_length",
+        ]
+    ].copy()
 
-    # Faixas etárias — segmentação para análise de negócio
+    # Faixas etárias - segmentação para análise de negócio
     dim["age_group"] = pd.cut(
         dim["person_age"],
         bins=[17, 25, 35, 45, 60, 100],
@@ -130,18 +133,22 @@ def build_fact_loans(
     fact["borrower_id"] = dim_borrower["borrower_id"].values
 
     # Seleciona apenas as colunas da fato
-    fact = fact[[
-        "borrower_id",
-        "loan_type_id",
-        "loan_amnt",
-        "loan_int_rate",
-        "loan_percent_income",
-        "loan_status",
-    ]].copy()
+    fact = fact[
+        [
+            "borrower_id",
+            "loan_type_id",
+            "loan_amnt",
+            "loan_int_rate",
+            "loan_percent_income",
+            "loan_status",
+        ]
+    ].copy()
 
     # Métricas derivadas
     fact["annual_interest_cost"] = fact["loan_amnt"] * fact["loan_int_rate"] / 100
-    fact["loan_status_label"] = fact["loan_status"].map({0: "Adimplente", 1: "Inadimplente"})
+    fact["loan_status_label"] = fact["loan_status"].map(
+        {0: "Adimplente", 1: "Inadimplente"}
+    )
 
     logger.info(f"✅ fact_loans: {len(fact):,} registros")
     return fact
@@ -150,6 +157,7 @@ def build_fact_loans(
 # ---------------------------------------------------------------------------
 # Agregações de negócio
 # ---------------------------------------------------------------------------
+
 
 def build_agg_default_by_grade(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -218,6 +226,7 @@ def build_agg_default_by_age(df: pd.DataFrame) -> pd.DataFrame:
 # Persistência
 # ---------------------------------------------------------------------------
 
+
 def save_gold_tables(tables: dict) -> None:
     """
     Salva todas as tabelas Gold em CSV e DuckDB.
@@ -239,10 +248,12 @@ def save_gold_tables(tables: dict) -> None:
 
         # DuckDB
         if conn:
-            conn.execute(f"""
+            conn.execute(
+                f"""
                 CREATE OR REPLACE TABLE {name} AS
                 SELECT * FROM read_csv_auto('{path}')
-            """)
+            """
+            )
             logger.success(f"💾 {name} registrada no DuckDB")
 
     if conn:
@@ -253,9 +264,10 @@ def save_gold_tables(tables: dict) -> None:
 # Execução principal
 # ---------------------------------------------------------------------------
 
+
 def run_gold_transform() -> dict:
     """Orquestra a transformação completa da camada Gold."""
-    logger.info("🚀 Iniciando transformação — Camada Gold")
+    logger.info("🚀 Iniciando transformação - Camada Gold")
 
     if not INPUT_FILE.exists():
         raise FileNotFoundError(
@@ -296,5 +308,5 @@ def run_gold_transform() -> dict:
 
 if __name__ == "__main__":
     tables = run_gold_transform()
-    print("\n📊 Amostra — Taxa de inadimplência por grade:")
+    print("\n📊 Amostra - Taxa de inadimplência por grade:")
     print(tables["agg_default_by_grade"])

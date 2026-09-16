@@ -5,10 +5,11 @@ loan_amnt
 loan_int_rate
 loan_percent_income
 cb_person_cred_hist_length
-custo_total
-renda_por_emp
-inadimplencia_previa
-loan_grade_enc
+debt_to_income_ratio
+income_per_year_employed
+estimated_total_cost
+has_prior_default
+loan_grade_encoded
 intent_EDUCATION
 intent_HOMEIMPROVEMENT
 intent_MEDICAL

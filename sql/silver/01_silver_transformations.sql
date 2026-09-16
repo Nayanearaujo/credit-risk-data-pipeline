@@ -1,5 +1,5 @@
 -- =============================================================================
--- Silver Layer — Queries de Transformação e Validação
+-- Silver Layer - Queries de Transformação e Validação
 -- =============================================================================
 -- Projeto: Pipeline de Risco de Crédito
 -- Autora:  Nayane Araújo | github.com/Nayanearaujo

@@ -1,5 +1,5 @@
 """
-Silver Layer — Limpeza e Validação dos Dados de Risco de Crédito
+Silver Layer - Limpeza e Validação dos Dados de Risco de Crédito
 ================================================================
 Transforma os dados brutos (Bronze) em dados limpos, tipados e validados.
 
@@ -42,6 +42,7 @@ OUTPUT_FILE = SILVER_PATH / "credit_risk_clean.csv"
 # ---------------------------------------------------------------------------
 # Funções de limpeza
 # ---------------------------------------------------------------------------
+
 
 def load_bronze(path: Path = INPUT_FILE) -> pd.DataFrame:
     """Carrega os dados brutos da camada Bronze."""
@@ -86,13 +87,23 @@ def fix_data_types(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
 
     # Floats
-    float_cols = ["person_income", "person_emp_length", "loan_int_rate", "loan_percent_income"]
+    float_cols = [
+        "person_income",
+        "person_emp_length",
+        "loan_int_rate",
+        "loan_percent_income",
+    ]
     for col in float_cols:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # Strings padronizadas
-    str_cols = ["person_home_ownership", "loan_intent", "loan_grade", "cb_person_default_on_file"]
+    str_cols = [
+        "person_home_ownership",
+        "loan_intent",
+        "loan_grade",
+        "cb_person_default_on_file",
+    ]
     for col in str_cols:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip().str.upper()
@@ -122,7 +133,9 @@ def handle_nulls(df: pd.DataFrame) -> pd.DataFrame:
         median_emp = df["person_emp_length"].median()
         nulls_emp = df["person_emp_length"].isnull().sum()
         df["person_emp_length"] = df["person_emp_length"].fillna(median_emp)
-        logger.info(f"  📌 person_emp_length: {nulls_emp} nulos → mediana ({median_emp:.1f} anos)")
+        logger.info(
+            f"  📌 person_emp_length: {nulls_emp} nulos → mediana ({median_emp:.1f} anos)"
+        )
 
     # Estratégia 2: mediana por grade para taxa de juros
     if "loan_int_rate" in df.columns and "loan_grade" in df.columns:
@@ -194,13 +207,16 @@ def save_to_silver(df: pd.DataFrame) -> None:
     df.to_csv(OUTPUT_FILE, index=False)
     logger.success(f"💾 Silver CSV salva em: {OUTPUT_FILE}")
 
-    # DuckDB — registra como view permanente
+    # DuckDB - registra como view permanente
     try:
         conn = get_duckdb_connection()
-        conn.execute("""
+        conn.execute(
+            """
             CREATE OR REPLACE TABLE silver_credit_risk AS
             SELECT * FROM read_csv_auto(?)
-        """, [str(OUTPUT_FILE)])
+        """,
+            [str(OUTPUT_FILE)],
+        )
         conn.close()
         logger.success("💾 Silver registrada no DuckDB como tabela 'silver_credit_risk'")
     except Exception as e:
@@ -210,7 +226,7 @@ def save_to_silver(df: pd.DataFrame) -> None:
 def log_silver_quality_report(df_before: pd.DataFrame, df_after: pd.DataFrame) -> None:
     """Loga relatório de qualidade comparando antes e depois da limpeza."""
     logger.info("=" * 60)
-    logger.info("📋 SILVER LAYER — Relatório de Qualidade")
+    logger.info("📋 SILVER LAYER - Relatório de Qualidade")
     logger.info("=" * 60)
     logger.info(f"Registros antes: {len(df_before):,}")
     logger.info(f"Registros após:  {len(df_after):,}")
@@ -225,9 +241,10 @@ def log_silver_quality_report(df_before: pd.DataFrame, df_after: pd.DataFrame) -
 # Execução principal
 # ---------------------------------------------------------------------------
 
+
 def run_silver_transform() -> pd.DataFrame:
     """Orquestra a transformação completa da camada Silver."""
-    logger.info("🚀 Iniciando transformação — Camada Silver")
+    logger.info("🚀 Iniciando transformação - Camada Silver")
 
     df_raw = load_bronze()
     df = remove_duplicates(df_raw)
@@ -244,7 +261,7 @@ def run_silver_transform() -> pd.DataFrame:
 
 if __name__ == "__main__":
     df_silver = run_silver_transform()
-    print(f"\nDataset limpo — primeiras linhas:")
+    print("\nDataset limpo - primeiras linhas:")
     print(df_silver.head())
-    print(f"\nTipos de dados:")
+    print("\nTipos de dados:")
     print(df_silver.dtypes)

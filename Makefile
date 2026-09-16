@@ -17,13 +17,13 @@ setup:  ## Instala dependências e configura o ambiente
 
 run-pipeline:  ## Executa o pipeline completo Bronze → Silver → Gold
 	@echo "🚀 Iniciando pipeline de dados..."
-	python src/ingestion/ingest_kaggle.py
+	python src/ingestion/ingest_openml.py
 	python src/transformation/silver_transform.py
 	python src/transformation/gold_transform.py
 	@echo "✅ Pipeline concluído!"
 
 run-bronze:  ## Executa apenas a camada Bronze (ingestão)
-	python src/ingestion/ingest_kaggle.py
+	python src/ingestion/ingest_openml.py
 	python src/ingestion/ingest_bcb_api.py
 
 run-silver:  ## Executa apenas a camada Silver (limpeza)

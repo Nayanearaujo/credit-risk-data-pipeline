@@ -1,5 +1,5 @@
 """
-Machine Learning — Avaliação Detalhada do Modelo
+Machine Learning - Avaliação Detalhada do Modelo
 ================================================
 Gera relatórios completos de performance com:
   - Matriz de confusão
@@ -21,9 +21,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger
 from sklearn.metrics import (
-    roc_auc_score, roc_curve,
-    precision_recall_curve, average_precision_score,
-    confusion_matrix, classification_report,
+    roc_auc_score,
+    roc_curve,
+    precision_recall_curve,
+    average_precision_score,
+    confusion_matrix,
+    classification_report,
 )
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -61,14 +64,19 @@ def plot_confusion_matrix(y_test, y_pred, save_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(6, 5))
 
     sns.heatmap(
-        cm, annot=True, fmt="d", cmap="RdYlGn_r",
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="RdYlGn_r",
         xticklabels=["Adimplente", "Inadimplente"],
         yticklabels=["Adimplente", "Inadimplente"],
         ax=ax,
     )
     ax.set_xlabel("Predito", fontsize=12)
     ax.set_ylabel("Real", fontsize=12)
-    ax.set_title("Matriz de Confusão — Risco de Crédito", fontsize=14, fontweight="bold")
+    ax.set_title(
+        "Matriz de Confusão - Risco de Crédito", fontsize=14, fontweight="bold"
+    )
 
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight")
@@ -82,12 +90,16 @@ def plot_roc_curve(y_test, y_proba, auc: float, save_path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(7, 6))
     ax.plot(fpr, tpr, color="#3498db", lw=2.5, label=f"AUC = {auc:.4f}")
-    ax.plot([0, 1], [0, 1], color="gray", linestyle="--", lw=1.5, label="Modelo Aleatório")
+    ax.plot(
+        [0, 1], [0, 1], color="gray", linestyle="--", lw=1.5, label="Modelo Aleatório"
+    )
     ax.fill_between(fpr, tpr, alpha=0.1, color="#3498db")
 
     ax.set_xlabel("Taxa de Falsos Positivos (FPR)", fontsize=12)
     ax.set_ylabel("Taxa de Verdadeiros Positivos (TPR)", fontsize=12)
-    ax.set_title("Curva ROC — Modelo de Risco de Crédito", fontsize=14, fontweight="bold")
+    ax.set_title(
+        "Curva ROC - Modelo de Risco de Crédito", fontsize=14, fontweight="bold"
+    )
     ax.legend(fontsize=11)
 
     plt.tight_layout()
@@ -96,7 +108,9 @@ def plot_roc_curve(y_test, y_proba, auc: float, save_path: Path) -> None:
     logger.success(f"💾 Curva ROC salva: {save_path}")
 
 
-def plot_feature_importance(model, feature_names: list, save_path: Path, top_n: int = 15) -> None:
+def plot_feature_importance(
+    model, feature_names: list, save_path: Path, top_n: int = 15
+) -> None:
     """Gera e salva o gráfico de importância das features."""
     if not hasattr(model, "feature_importances_"):
         logger.warning("⚠️  Modelo não suporta feature_importances_. Pulando.")
@@ -110,8 +124,11 @@ def plot_feature_importance(model, feature_names: list, save_path: Path, top_n: 
     top_features.sort_values().plot(kind="barh", ax=ax, color=colors)
 
     ax.set_xlabel("Importância", fontsize=12)
-    ax.set_title(f"Top {top_n} Features — Impacto no Risco de Inadimplência",
-                 fontsize=14, fontweight="bold")
+    ax.set_title(
+        f"Top {top_n} Features - Impacto no Risco de Inadimplência",
+        fontsize=14,
+        fontweight="bold",
+    )
 
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight")
@@ -133,7 +150,9 @@ def run_evaluation() -> dict:
     logger.info(f"📊 AUC-ROC: {auc:.4f}")
 
     # Relatório completo
-    report = classification_report(y_test, y_pred, target_names=["Adimplente", "Inadimplente"])
+    report = classification_report(
+        y_test, y_pred, target_names=["Adimplente", "Inadimplente"]
+    )
     logger.info(f"\n{report}")
 
     # Gráficos

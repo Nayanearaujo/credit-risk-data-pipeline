@@ -1,5 +1,5 @@
 -- =============================================================================
--- Gold Layer — Queries de Modelagem Dimensional e Análise de Negócio
+-- Gold Layer - Queries de Modelagem Dimensional e Análise de Negócio
 -- =============================================================================
 -- Projeto: Pipeline de Risco de Crédito
 -- Autora:  Nayane Araújo | github.com/Nayanearaujo
@@ -29,7 +29,7 @@ LEFT JOIN dim_loan_type lt
 
 
 -- -----------------------------------------------------------------------------
--- 2. Análise: Risco por Grade — responde "Qual grade tem maior inadimplência?"
+-- 2. Análise: Risco por Grade - responde "Qual grade tem maior inadimplência?"
 -- -----------------------------------------------------------------------------
 SELECT
     lt.loan_grade,

@@ -1,4 +1,4 @@
-Modelo,auc_roc,f1_score,precision,recall
-Regressao Logistica,0.6395,0.0172,0.625,0.0087
-Random Forest,0.6357,0.0,0.0,0.0
-XGBoost,0.6224,0.0153,0.2812,0.0079
+model,cv_auc_mean,cv_auc_std,test_auc_roc,f1_score,precision,recall,ks_statistic,brier_score
+XGBoost_Tuned,0.984,0.0013,0.9388,0.822,0.9205,0.7426,0.739,0.0585
+Random_Forest,0.9643,0.0016,0.9092,0.7771,0.815,0.7426,0.7037,0.0822
+Regressao_Logistica,0.9069,0.0018,0.8295,0.6038,0.5476,0.6728,0.5281,0.1399

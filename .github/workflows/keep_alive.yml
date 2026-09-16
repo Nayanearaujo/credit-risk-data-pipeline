@@ -1,5 +1,5 @@
 # ============================================================
-# GitHub Actions — Keep-Alive para Streamlit Cloud
+# GitHub Actions - Keep-Alive para Streamlit Cloud
 # ============================================================
 # O Streamlit Community Cloud coloca apps em modo 'sleep'
 # se ficarem 7 dias sem nenhum acesso.

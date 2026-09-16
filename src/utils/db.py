@@ -19,8 +19,9 @@ load_dotenv()
 
 
 # ---------------------------------------------------------------------------
-# DuckDB — banco analítico local (padrão do projeto)
+# DuckDB - banco analítico local (padrão do projeto)
 # ---------------------------------------------------------------------------
+
 
 def get_duckdb_connection(read_only: bool = False) -> duckdb.DuckDBPyConnection:
     """
@@ -60,8 +61,9 @@ def execute_duckdb_query(query: str, params: dict = None) -> "duckdb.DuckDBPyRel
 
 
 # ---------------------------------------------------------------------------
-# PostgreSQL — banco relacional (opcional, para ambiente de produção)
+# PostgreSQL - banco relacional (opcional, para ambiente de produção)
 # ---------------------------------------------------------------------------
+
 
 def get_postgres_engine():
     """
@@ -77,7 +79,12 @@ def get_postgres_engine():
     Raises:
         EnvironmentError: Se variáveis de ambiente não estiverem configuradas.
     """
-    required_vars = ["POSTGRES_HOST", "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD"]
+    required_vars = [
+        "POSTGRES_HOST",
+        "POSTGRES_DB",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD",
+    ]
     missing = [v for v in required_vars if not os.getenv(v)]
     if missing:
         raise EnvironmentError(

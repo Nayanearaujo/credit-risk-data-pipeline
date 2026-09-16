@@ -1,11 +1,11 @@
 """
-Bronze Layer — Ingestão da Taxa Selic via API do Banco Central do Brasil
+Bronze Layer - Ingestão da Taxa Selic via API do Banco Central do Brasil
 =========================================================================
 Coleta dados macroeconômicos públicos para enriquecer a análise de crédito.
 A Taxa Selic influencia diretamente o risco de inadimplência.
 
 API: https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados
-     (Série 432 = Taxa Selic Over — diária, desde 1986)
+     (Série 432 = Taxa Selic Over - diária, desde 1986)
 
 Autora: Nayane Araújo | github.com/Nayanearaujo
 """
@@ -57,7 +57,7 @@ def fetch_selic_data(start_date: str = None, end_date: str = None) -> pd.DataFra
         "dataFinal": end_date,
     }
 
-    logger.info(f"🏦 Consultando API BCB — Selic de {start_date} a {end_date}")
+    logger.info(f"🏦 Consultando API BCB - Selic de {start_date} a {end_date}")
     response = requests.get(BCB_API_URL, params=params, timeout=30)
     response.raise_for_status()
 
@@ -89,7 +89,7 @@ def run_bcb_ingestion() -> pd.DataFrame:
     Returns:
         DataFrame com dados brutos da Selic.
     """
-    logger.info("🚀 Iniciando ingestão BCB — Taxa Selic")
+    logger.info("🚀 Iniciando ingestão BCB - Taxa Selic")
 
     try:
         df = fetch_selic_data()
@@ -104,5 +104,5 @@ def run_bcb_ingestion() -> pd.DataFrame:
 
 if __name__ == "__main__":
     df_selic = run_bcb_ingestion()
-    print(f"\nÚltimas taxas Selic:")
+    print("\nÚltimas taxas Selic:")
     print(df_selic.tail())

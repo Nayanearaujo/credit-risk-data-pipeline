@@ -1,5 +1,5 @@
 """
-Machine Learning — Engenharia de Features
+Machine Learning - Engenharia de Features
 ==========================================
 Prepara as features para o modelo de Risco de Crédito.
 
@@ -57,10 +57,10 @@ def create_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
 
-    # Razão dívida/renda (DTI) — quanto da renda mensal vai para a parcela
+    # Razão dívida/renda (DTI) - quanto da renda mensal vai para a parcela
     df["debt_to_income_ratio"] = df["loan_percent_income"]
 
-    # Estabilidade financeira — renda por ano de emprego
+    # Estabilidade financeira - renda por ano de emprego
     df["income_per_year_employed"] = df["person_income"] / (df["person_emp_length"] + 1)
 
     # Custo total estimado do empréstimo
@@ -69,9 +69,22 @@ def create_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     # Histórico de inadimplência
     df["has_prior_default"] = (df["cb_person_default_on_file"] == "Y").astype(int)
 
-    logger.info(f"✅ Features derivadas criadas: debt_to_income_ratio, income_per_year_employed, "
-                f"estimated_total_cost, has_prior_default")
+    logger.info(
+        "✅ Features derivadas criadas: debt_to_income_ratio, income_per_year_employed, "
+        "estimated_total_cost, has_prior_default"
+    )
     return df
+
+
+INTENT_CATEGORIES = [
+    "DEBTCONSOLIDATION",
+    "EDUCATION",
+    "HOMEIMPROVEMENT",
+    "MEDICAL",
+    "PERSONAL",
+    "VENTURE",
+]
+HOME_CATEGORIES = ["MORTGAGE", "OTHER", "OWN", "RENT"]
 
 
 def encode_categoricals(df: pd.DataFrame) -> pd.DataFrame:
@@ -85,16 +98,25 @@ def encode_categoricals(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     # Ordinal: grade de risco
-    enc_grade = OrdinalEncoder(categories=GRADE_ORDER, handle_unknown="use_encoded_value",
-                               unknown_value=np.nan)
+    enc_grade = OrdinalEncoder(
+        categories=GRADE_ORDER,
+        handle_unknown="use_encoded_value",
+        unknown_value=np.nan,
+    )
     df["loan_grade_encoded"] = enc_grade.fit_transform(df[["loan_grade"]])
 
-    # One-Hot: propósito do empréstimo
+    # One-Hot: propósito do empréstimo (Categorical garante consistência para 1 linha ou N linhas)
+    df["loan_intent"] = pd.Categorical(df["loan_intent"], categories=INTENT_CATEGORIES)
     intent_dummies = pd.get_dummies(df["loan_intent"], prefix="intent", drop_first=True)
     df = pd.concat([df, intent_dummies], axis=1)
 
-    # One-Hot: tipo de moradia
-    home_dummies = pd.get_dummies(df["person_home_ownership"], prefix="home", drop_first=True)
+    # One-Hot: tipo de moradia (Categorical garante consistência para 1 linha ou N linhas)
+    df["person_home_ownership"] = pd.Categorical(
+        df["person_home_ownership"], categories=HOME_CATEGORIES
+    )
+    home_dummies = pd.get_dummies(
+        df["person_home_ownership"], prefix="home", drop_first=True
+    )
     df = pd.concat([df, home_dummies], axis=1)
 
     logger.info("✅ Encoding concluído: OrdinalEncoder (grade) + One-Hot (intent, home)")
@@ -112,7 +134,9 @@ def select_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     # Remove colunas que não devem entrar no modelo
     drop_cols = [
         "loan_status",
-        "loan_grade", "loan_intent", "person_home_ownership",
+        "loan_grade",
+        "loan_intent",
+        "person_home_ownership",
         "cb_person_default_on_file",
         "loan_status_label",
     ]
@@ -160,7 +184,7 @@ def split_and_scale(
         smote = SMOTE(random_state=random_state)
         X_train, y_train = smote.fit_resample(X_train, y_train)
         logger.info(
-            f"⚖️  SMOTE aplicado — Treino: {len(y_train):,} registros "
+            f"⚖️  SMOTE aplicado - Treino: {len(y_train):,} registros "
             f"({y_train.value_counts().to_dict()})"
         )
 

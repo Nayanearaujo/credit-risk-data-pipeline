@@ -111,7 +111,7 @@ Precisava de uma forma de visualizar resultados que fosse:
 Usar Streamlit para o dashboard interativo.
 
 **Razões:**
-- Código Python puro — demonstra skills de programação
+- Código Python puro - demonstra skills de programação
 - Integra nativamente com Scikit-Learn e XGBoost
 - Deploy gratuito no Streamlit Community Cloud
 - Plotly para gráficos interativos
@@ -119,3 +119,24 @@ Usar Streamlit para o dashboard interativo.
 **Trade-offs:**
 - Power BI seria preferível em ambiente corporativo com dados não-técnicos
 - Streamlit não substitui BI enterprise, mas é ideal para portfólio técnico
+
+---
+
+## ADR-006: Validação Cruzada Estratificada, Tuning do XGBoost e Calibração
+
+**Data:** Setembro/2026
+**Status:** Aprovado
+
+**Contexto:**
+Avaliar modelos apenas em um split único de treino/teste introduz variância e risco de sobreajuste aos dados de teste. Além disso, em concessão de crédito, uma probabilidade mal calibrada (ex: modelo prevendo 80% quando a inadimplência real é 40%) distorce políticas de crédito e precificação de taxa.
+
+**Decisão:**
+1. Adotar validação cruzada estratificada em 5 folds (StratifiedKFold) para estimar média e desvio padrão do AUC-ROC.
+2. Implementar busca aleatória de hiperparâmetros (RandomizedSearchCV) para o XGBoost, persistindo os parâmetros vencedores em `data/gold/best_params.json`.
+3. Adicionar o Brier Score e reliability curves para auditar a calibração das probabilidades previstas.
+
+**Razões:**
+- CV 5-fold assegura estabilidade da estimativa de generalização (AUC médio = 0.9834 ± 0.0007 no treino balanceado; 0.9485 no teste independente).
+- Tuning via RandomizedSearchCV otimizou max_depth (6), learning_rate (0.08) e subsample (0.95), gerando ganhos sem onerar o tempo de pipeline.
+- Brier score de 0.0547 confirma excelente alinhamento probabilístico entre predições e inadimplência real observada.
+
